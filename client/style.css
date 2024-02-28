@@ -1,6 +1,4 @@
 
-/* Import Google font - Poppins */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 * {
     margin: 0;
     padding: 0;
@@ -111,5 +109,14 @@
     margin-left: 3%;
     text-decoration: lightslategray;
 }
+
+.left-message {
+    text-align: left;
+}
+
+.right-message {
+    text-align: right;
+}
+
 
 

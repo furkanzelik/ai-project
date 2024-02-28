@@ -1,51 +1,60 @@
 const userInput = document.getElementById('field');
 const chatDiv = document.getElementById('content');
 const messageDiv = document.createElement('div');
+const banner = document.getElementById('banner');
 
 
 
-document.getElementById('submitButton').addEventListener('click', async ()=> {
-    //retrieve user input
-    userInput.value
+// Define displayMessage function in the global scope
+function displayMessage(message, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = message;
 
-    //show the user question in the chat
-    displayMessage(userInput.value, 'user');
+    // Apply different classes based on the sender
+    if (sender === 'user') {
+        messageDiv.classList.add('user-message', 'right-message');
+    } else if (sender === 'bot') {
+        messageDiv.classList.add('bot-message', 'left-message');
+    }
 
+    chatDiv.appendChild(messageDiv);
+}
 
-    try{
-        // question to server (PRG06)
+// Event listener for submit button
+document.getElementById('submitButton').addEventListener('click', async () => {
+
+    //quit banner
+    banner.style.display = 'none'
+
+    // Retrieve user input value from the input field
+    const userInputValue = userInput.value;
+
+    // Show the user question in the chat
+    displayMessage(userInputValue, 'user');
+
+    try {
+        // Send the user input to the server
         const response = await fetch('http://127.0.0.1:8080/chatting', {
             method: 'POST',
             headers: {
-                'Content-Type' : 'application/json'
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({query: userInput})
+            body: JSON.stringify({ query: userInputValue }) // Send user input value
         });
-        if (!response.ok){
-            throw new Error('cannot fetch from server');
+
+        if (!response.ok) {
+            throw new Error('Cannot fetch from server');
         }
 
-        // get data from the server
+        // Get data from the server
         const data = await response.json();
         const chatResponse = data.response;
 
-        //display message of the chatbot
-        displayMessage (chatResponse, 'bot');
-    }catch (error){
+        // Display message of the chatbot kwargs = postman object/item
+        displayMessage(chatResponse.kwargs.content, 'bot'); // Update here to display the bot's response directly
+    } catch (error) {
         console.log('Error:', error);
     }
 });
-
-
-// display message function
-
-    function displayMessage(message, sender) {
-
-        messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-        messageDiv.textContent = message;
-        chatDiv.appendChild(messageDiv);
-
-    }
-
 
 
