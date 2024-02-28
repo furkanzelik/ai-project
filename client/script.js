@@ -9,7 +9,8 @@ document.getElementById('submitButton').addEventListener('click', async ()=> {
     userInput.value
 
     //show the user question in the chat
-    displayMessage(userInput, 'user');
+    displayMessage(userInput.value, 'user');
+
 
     try{
         // question to server (PRG06)

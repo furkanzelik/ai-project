@@ -40,22 +40,23 @@ const model = new ChatOpenAI({
 // });
 
 // Define endpoint for POST chat messages
-router.post('/chatting', async (req, res) => {
-    try {
-        const { query } = req.body;
+router.post('/chatting', async(req, res) =>{
+    try{
+        const {query} = req.body;
+        console.log("Received query:", query); // Log received query for debugging
         const response = await model.invoke(query);
-        res.json({ response });
-    } catch (err) {
-        console.error('there is a fault to create a chat:', err);
-        res.status(500).json({ err: 'there is a fault to create a chat' });
+        res.json({response})
     }
-});
+    catch(error){
+        console.error("Error processing chat query:", error); // Log error for debugging
+        res.status(500).json({ error: "Error processing chat query"});
+    }
+})
 
 // Mount the router at the root level
 app.use('/', router);
 
 // Start the server
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+    console.log(`Server is running on port ${process.env.PORT}`);
 });
