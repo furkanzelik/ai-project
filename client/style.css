@@ -112,10 +112,13 @@
 
 .left-message {
     text-align: left;
+    margin-top: 5px;
 }
 
 .right-message {
     text-align: right;
+    margin-right: 5px;
+    margin-top: 5px;
 }
 
 

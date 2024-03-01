@@ -1,8 +1,7 @@
 const userInput = document.getElementById('field');
 const chatDiv = document.getElementById('content');
-const messageDiv = document.createElement('div');
 const banner = document.getElementById('banner');
-
+const submitButton = document.getElementById('submitButton');
 
 
 // Define displayMessage function in the global scope
@@ -10,7 +9,7 @@ function displayMessage(message, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.textContent = message;
 
-    // Apply different classes based on the sender
+    // Apply different classes based on the sender for styling
     if (sender === 'user') {
         messageDiv.classList.add('user-message', 'right-message');
     } else if (sender === 'bot') {
@@ -23,7 +22,9 @@ function displayMessage(message, sender) {
 // Event listener for submit button
 document.getElementById('submitButton').addEventListener('click', async () => {
 
-    //quit banner
+    submitButton.disabled = true;
+
+    //if send banner goes away
     banner.style.display = 'none'
 
     // Retrieve user input value from the input field
@@ -46,7 +47,7 @@ document.getElementById('submitButton').addEventListener('click', async () => {
             throw new Error('Cannot fetch from server');
         }
 
-        // Get data from the server
+        //  data from the server
         const data = await response.json();
         const chatResponse = data.response;
 
@@ -54,6 +55,8 @@ document.getElementById('submitButton').addEventListener('click', async () => {
         displayMessage(chatResponse.kwargs.content, 'bot'); // Update here to display the bot's response directly
     } catch (error) {
         console.log('Error:', error);
+    } finally {
+        submitButton.disabled = false;
     }
 });
 
