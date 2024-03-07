@@ -47,13 +47,14 @@ function createResponseTemplate(userInput) {
     }
 }
 
-// document.addEventListener('DOMContentLoaded', () => {
-//     // Load chat history when the page is loaded
-//     const chatHistory = loadChatHistory();
-//     chatHistory.forEach(([sender, message]) => {
-//         displayMessage(message, sender);
-//     });
-// });
+document.addEventListener('DOMContentLoaded', () => {
+    // Load chat history when the page is loaded
+    const chatHistory = loadChatHistory();
+    chatHistory.forEach(([sender, message]) => {
+        displayMessage(message, sender);
+    });
+});
+
 
 
 
@@ -65,7 +66,6 @@ document.getElementById('submitButton').addEventListener('click', async () => {
 
     // Retrieve user input value from the input field
     const userInputValue = userInput.value;
-
     // Show the user question in the chat
     displayMessage(userInputValue, 'user');
 
@@ -104,6 +104,34 @@ document.getElementById('submitButton').addEventListener('click', async () => {
         console.log('Error:', error);
     } finally {
         submitButton.disabled = false;
+    }
+});
+
+// Function to search for relevant information in stored conversation history
+function searchChatHistory(query) {
+    const chatHistory = loadChatHistory();
+    return chatHistory.filter(([sender, message]) => {
+        return message.toLowerCase().includes(query.toLowerCase());
+    });
+}
+
+// Function to process user query and generate response
+function processUserQuery(query) {
+    const relevantMessages = searchChatHistory(query);
+    if (relevantMessages.length > 0) {
+        const response = relevantMessages.map(([sender, message]) => `${sender}: ${message}`).join('\n');
+        return `Here is what I found in our conversation history:\n${response}`;
+    } else {
+        return "I couldn't find any relevant information in our conversation history.";
+    }
+}
+
+// Handle user input for queries about past conversations
+document.getElementById('submitButton').addEventListener('click', async () => {
+    const userInputValue = userInput.value;
+    if (userInputValue.toLowerCase().includes('history')) {
+        const response = processUserQuery(userInputValue);
+        displayMessage(response, 'bot');
     }
 });
 
