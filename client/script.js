@@ -2,20 +2,22 @@ const userInput = document.getElementById('field');
 const chatDiv = document.getElementById('content');
 const banner = document.getElementById('banner');
 const submitButton = document.getElementById('submitButton');
-let conversationRemember = {};
 
+// Define global variable for chat history
+let chatHistory = [];
 
-function saveChatHistory(messages) {
-    localStorage.setItem('ChatHistory', JSON.stringify(messages));
+// Function to save chat history
+function saveChatHistory() {
+    localStorage.setItem('ChatHistory', JSON.stringify(chatHistory));
 }
 
-function loadChatHistory(){
-    const chatHistory = localStorage.getItem('ChatHistory');
-    return chatHistory ? JSON.parse(chatHistory) : [];
+// Function to load chat history
+function loadChatHistory() {
+    const chatHistoryData = localStorage.getItem('ChatHistory');
+    chatHistory = chatHistoryData ? JSON.parse(chatHistoryData) : [];
 }
 
-
-function displayMessage(message, sender) {
+function displayMessage(message, sender, temperature) {
     const messageDiv = document.createElement('div');
     messageDiv.textContent = message;
 
@@ -27,12 +29,41 @@ function displayMessage(message, sender) {
     }
 
     chatDiv.appendChild(messageDiv);
+
+    if (temperature !== null) {
+        const temperatureDiv = document.createElement('div-temperature');
+        temperatureDiv.textContent = `Temperature: ${temperature}°C`;
+        temperatureDiv.classList.add('temperature');
+        messageDiv.parentNode.insertBefore(temperatureDiv, messageDiv.nextSibling);
+    }
 }
 
+// Load chat history when the page is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
+    chatHistory.forEach(({ message, sender }) => {
+        displayMessage(message, sender);
+    });
+});
+
+
+
+// Function to search for relevant information in stored conversation history
+function searchChatHistory(query) {
+    return chatHistory.filter(({ message }) => {
+        return message.toLowerCase().includes(query.toLowerCase());
+    });
+}
 
 function createEngineeredPromptTemplate(userInput) {
-    // Provide clear instructions and context for the user
-    return `You are a holiday planner chatbot. Your goal is to help users plan their holidays. Based on their preferences, you will suggest activities and destinations. For example, you may ask: "What type of holiday are you interested in? (e.g., sporting, historical)". Please provide your holiday preferences: ${userInput}`;
+    // Include the chat history in the prompt for context
+    const chatHistoryContext = chatHistory.map(({ message }) => `* ${message}`).join('\n');
+    return `You are a holiday planner chatbot. Your goal is to help users plan their holidays with a good conversation. Based on their preferences and past conversation (see below), you will suggest activities and destinations.
+
+  **Conversation History:**
+  ${chatHistoryContext}
+
+  Please provide your holiday preferences: ${userInput}`;
 }
 
 function createResponseTemplate(userInput) {
@@ -46,16 +77,6 @@ function createResponseTemplate(userInput) {
         return `Thank you for providing your holiday preferences. Based on your input, I will tailor my suggestions to best suit your interests. Feel free to provide more details or ask any questions you may have.`;
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Load chat history when the page is loaded
-    const chatHistory = loadChatHistory();
-    chatHistory.forEach(([sender, message]) => {
-        displayMessage(message, sender);
-    });
-});
-
-
 
 
 // submit button
@@ -80,7 +101,8 @@ document.getElementById('submitButton').addEventListener('click', async () => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ query: engineeredPrompt, responseTemplate: responseTemplate }) // Send user input value
+            body: JSON.stringify({ query: engineeredPrompt, responseTemplate, latitude: 51.926517,
+                longitude: 4.462456 }) // Send user input value
         });
 
         if (!response.ok) {
@@ -95,43 +117,32 @@ document.getElementById('submitButton').addEventListener('click', async () => {
         displayMessage(chatResponse.kwargs.content, 'bot');
 
         // Save the user input and bot response to chat history
-        const chatHistory = loadChatHistory();
-        chatHistory.push(['user', userInputValue]);
-        chatHistory.push(['bot', chatResponse.kwargs.content]);
-        saveChatHistory(chatHistory);
+        chatHistory.push({ message: userInputValue, sender: 'user' });
+        chatHistory.push({ message: chatResponse.kwargs.content, sender: 'bot' });
+        saveChatHistory();
 
     } catch (error) {
         console.log('Error:', error);
     } finally {
         submitButton.disabled = false;
+
     }
 });
 
-// Function to search for relevant information in stored conversation history
-function searchChatHistory(query) {
-    const chatHistory = loadChatHistory();
-    return chatHistory.filter(([sender, message]) => {
-        return message.toLowerCase().includes(query.toLowerCase());
-    });
-}
-
-// Function to process user query and generate response
-function processUserQuery(query) {
-    const relevantMessages = searchChatHistory(query);
-    if (relevantMessages.length > 0) {
-        const response = relevantMessages.map(([sender, message]) => `${sender}: ${message}`).join('\n');
-        return `Here is what I found in our conversation history:\n${response}`;
-    } else {
-        return "I couldn't find any relevant information in our conversation history.";
-    }
-}
 
 // Handle user input for queries about past conversations
 document.getElementById('submitButton').addEventListener('click', async () => {
     const userInputValue = userInput.value;
     if (userInputValue.toLowerCase().includes('history')) {
-        const response = processUserQuery(userInputValue);
-        displayMessage(response, 'bot');
+        const query = userInputValue.replace('history', '').trim();
+        const relevantMessages = searchChatHistory(query);
+        if (relevantMessages.length > 0) {
+            const response = relevantMessages.map(({ message, sender }) => `${sender}: ${message}`).join('\n');
+            displayMessage(`Here is what I found in our conversation history:\n${response}`, 'bot');
+            console.log(response);
+        } else {
+            displayMessage("I couldn't find any relevant information in our conversation history.", 'bot');
+        }
     }
 });
 
