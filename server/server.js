@@ -3,6 +3,7 @@ import express from 'express';
 import { ChatOpenAI } from "@langchain/openai";
 import cors from 'cors';
 
+
 const app = express();
 const router = express.Router();
 
@@ -18,41 +19,20 @@ const model = new ChatOpenAI({
 });
 
 
-const getCurrentTemperature = async (latitude, longitude) => {
-    try {
-        const apiKey = process.env.TOMORROW_IO_API_KEY;
-        const response = await fetch(
-            `https://api.tomorrow.io/v4/weather/realtime?lat=${latitude}&lon=${longitude}&fields=temperature&apikey=${apiKey}`
-        );
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        const temperature = data.data.values.temperature;
-        return temperature;
-    } catch (error) {
-        console.error('Error fetching current temperature:', error);
-        return null;
-    }
-};
-
-
-// Define endpoint for POST chat messages
+//  POST chat messages
 router.post('/chatting', async(req, res) =>{
     try{
         const {query} = req.body;
-        const { latitude, longitude } = req.body;
-        const temperature = await getCurrentTemperature(latitude, longitude);
-
-        console.log("Received query:", query); // Log received query for debugging
+        console.log("Received query:", query); //  debugging
         const response = await model.invoke(query);
-        res.json({response, temperature})
+        res.json({response});
     }
     catch(error){
-        console.error("Error processing chat query:", error); // Log error for debugging
+        console.error("Error processing chat query:", error); //debugging
         res.status(500).json({ error: "Error processing chat query"});
     }
 })
+
 
 
 
